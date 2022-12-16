@@ -1,43 +1,148 @@
 const { Keypair, Address } = require('@helium/crypto');
 const inquirer = require('inquirer');
-const wordlist = require('./wordlist/english.json');
+const words = require('./wordlist/english.json');
+const fs = require('fs');
 const { log } = console;
-const ascii =
-`      _
-      |_ __ _|_    _  _  __ o |_)_|_ _
-      | || | |_   _> (_  |  | |   |_ /_
-`;
-const INVALID_LENGTH = 'This script only allows for 10 or 22 words.';
-log(ascii);
+const readline = require('readline');
 
-async function findWord() {
-  const questions = [
-    { type: 'input', name: 'mnemonic', message: 'mnemonic (example: radio invite life ... cabbage)' },
-    { type: 'input', name: 'missing', message: 'what address are you looking for?' },
-  ];
-  const { mnemonic, missing } = await inquirer.prompt(questions);
-  const words = mnemonic.split(' ');
-  if (words.length !== 10 && words.length !== 22) throw new Error(INVALID_LENGTH);
-  words.map((word) => {
-    if (wordlist.indexOf(word) === -1) throw new Error(`Invalid word: ${word}`);
-  });
-  if (!Address.isValid(missing)) throw new Error(`Invalid address: ${missing}`);
-  for (let order = 0; order < (words.length + 2); order++) {
-    for (let i = 0; i < wordlist.length; i++) {
-      words.splice(order, 0, wordlist[i]);
-      const keypair = await Keypair.fromWords(words).catch(() => {});
-      keypair ? address = keypair.address.b58 : address = [];
-      if (address !== missing) {
-        words.splice(order, 1);
-      } else return log('\n', 'Address:', address, '\n', 'Words:', words);
+let phraseString = '';
+
+// Function to search for the missing words in a 12-word phrase
+async function findMissingWords(phraseString, addresses) {
+  // Declare the iterations variable
+  let iterations = 0;
+  const maxIterations = 10000000; // Adjust this value as needed
+
+  // Keep looping until a match is found
+  while (true) {
+    // Create an array of shuffled words for each position in the phrase
+    let wordsShuffled = [];
+    for (let i = 0; i < 12; i++) {
+      // Shuffle the words array for this position
+      wordsShuffled[i] = words.sort(() => Math.random() - 0.5);
     }
+
+    // Create an array to hold the selected words for the phrase
+    let phrase = [];
+
+    // Select a word for each position in the phrase
+    for (let i = 0; i < 12; i++) {
+      phrase[i] = wordsShuffled[i][0];
+    }
+    for (let j = 1; j < 12; j++) {
+      phrase[j] = wordsShuffled[j][1];
+    }
+    for (let k = 2; k < 12; k++) {
+      phrase[k] = wordsShuffled[k][2];
+    }
+    for (let l = 3; l < 12; l++) {
+      phrase[l] = wordsShuffled[l][3];
+    }
+    for (let m = 4; m < 12; m++) {
+      phrase[m] = wordsShuffled[m][4];
+    }
+    for (let n = 5; n < 12; n++) {
+      phrase[n] = wordsShuffled[n][5];
+    }
+    for (let o = 6; o < 12; o++) {
+      phrase[o] = wordsShuffled[o][6];
+    }
+    for (let p = 7; p < 12; p++) {
+      phrase[p] = wordsShuffled[p][7];
+    }
+    for (let q = 8; q < 12; q++) {
+      phrase[q] = wordsShuffled[q][8];
+    }
+    for (let r = 9; r < 12; r++) {
+      phrase[r] = wordsShuffled[r][9];
+    }
+    for (let s = 10; s < 12; s++) {
+      phrase[s] = wordsShuffled[s][10];
+    }
+    for (let t = 11; t < 12; t++) {
+      phrase[t] = wordsShuffled[t][11];
+    }
+
+    
+    
+
+    
+
+    // Check if the resulting phrase creates any of the desired addresses
+    const keypair = await Keypair.fromWords(phrase).catch(() => {});
+    const newAddress = keypair ? keypair.address.b58 : [];
+    if (addresses.includes(newAddress)) {
+      // Return the missing words that create the desired address
+      return phrase;
+    }
+    // Increment the iteration counter
+    iterations++;
+
+    // Check if the number of iterations is a multiple of 10,000
+    if (iterations % 10000 === 0) {
+      // Print the number of iterations
+      console.log(`Iterations: ${iterations}`);
+      // Print the number of iterations
+      console.log(`${phrase}`);
+      // Check if a match has been found
+      const missingWords = await findMissingWords(phraseString, addresses);
+      if (missingWords) {
+        // Return the missing words if a match was found
+        return missingWords;
+      }
+    }
+    // Check if the maximum number of iterations has been reached
+    //if (iterations >= maxIterations) {
+    ///  break;
+    //}
   }
 }
 
-inquirer.prompt({
-  type: 'list', name: 'cmd', message: 'choose a command', choices: ['find missing word', 'exit'],
-})
-  .then(async (answer) => {
-    if (answer.cmd === 'find missing word') return findWord();
-    if (answer.cmd === 'exit') return log('goodbye.');
+
+
+async function findWord() {
+  // Prompt the user for the addresses they are looking for
+  const addresses = await inquirer.prompt({
+    type: 'input',
+    name: 'addresses',
+    message: 'What addresses are you looking for? (separate multiple addresses with a comma)',
   });
+
+  // Split the user-provided addresses on commas
+  const addressList = addresses.addresses.split(',');
+
+  // Validate each user-provided address
+  for (const address of addressList) {
+    if (!Address.isValid(address)) {
+      log('Invalid address. Please try again.');
+      return findWord();
+    }
+  }
+
+  // Call the findMissingWords() function to search for the missing words
+  const result = await findMissingWords(phraseString, addressList);
+  if (result) {
+    log(`The missing words are: ${result.join(' ')}`);
+  } else {
+    log('Could not find the missing words.');
+  }
+}
+
+
+inquirer.prompt({
+  type: 'list',
+  name: 'cmd',
+  message: 'Choose a command',
+  choices: ['find missing words', 'exit'],
+})
+  .then(({ cmd }) => {
+    switch (cmd) {
+      case 'find missing words':
+        findWord();
+        break;
+      case 'exit':
+        process.exit();
+    }
+  });
+
+              
