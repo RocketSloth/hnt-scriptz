@@ -72,6 +72,17 @@ async function findMissingWords(phraseString, addresses) {
     const keypair = await Keypair.fromWords(phrase).catch(() => {});
     const newAddress = keypair ? keypair.address.b58 : [];
     if (addresses.includes(newAddress)) {
+      // Save the matching recovery phrase to a file
+      fs.appendFile('matches.txt', `${phrase}\n`, (error) => {
+        if (error) {
+          console.error(error);
+        }
+      });
+
+
+
+
+
       // Return the missing words that create the desired address
       return phrase;
     }
@@ -105,44 +116,38 @@ async function findWord() {
   const addresses = await inquirer.prompt({
     type: 'input',
     name: 'addresses',
-    message: 'What addresses are you looking for? (separate multiple addresses with a comma)',
+    message: 'What addresses are you looking for? (separate addresses with a space)'
+  }).then((answers) => {
+    return answers.addresses.split(' ');
   });
 
-  // Split the user-provided addresses on commas
-  const addressList = addresses.addresses.split(',');
+  // Prompt the user for the known words in the recovery phrase
+  const knownWords = await inquirer.prompt({
+    type: 'input',
+    name: 'knownWords',
+    message: 'What words do you already know in the recovery phrase? (separate known words with a space)'
+  }).then((answers) => {
+    return answers.knownWords.split(' ');
+  });
 
-  // Validate each user-provided address
-  for (const address of addressList) {
-    if (!Address.isValid(address)) {
-      log('Invalid address. Please try again.');
-      return findWord();
+  // Create the partial recovery phrase by replacing the unknown words with underscores
+  for (let i = 0; i < 12; i++) {
+    if (knownWords.includes(words[i])) {
+      phraseString += `${words[i]} `;
+    } else {
+      phraseString += `_ `;
     }
   }
 
-  // Call the findMissingWords() function to search for the missing words
-  const result = await findMissingWords(phraseString, addressList);
-  if (result) {
-    log(`The missing words are: ${result.join(' ')}`);
+  // Find the missing words in the recovery phrase
+  const missingWords = await findMissingWords(phraseString, addresses);
+  if (missingWords) {
+    console.log(`Found a match! The missing words are: ${missingWords}`);
   } else {
-    log('Could not find the missing words.');
+    console.log('No match found.');
   }
 }
 
-
-inquirer.prompt({
-  type: 'list',
-  name: 'cmd',
-  message: 'Choose a command',
-  choices: ['find missing words', 'exit'],
-})
-  .then(({ cmd }) => {
-    switch (cmd) {
-      case 'find missing words':
-        findWord();
-        break;
-      case 'exit':
-        process.exit();
-    }
-  });
+findWord();
 
               
