@@ -1,5 +1,4 @@
 const { Keypair, Address } = require('@helium/crypto');
-const inquirer = require('inquirer');
 const words = require('./wordlist/english.json');
 const fs = require('fs');
 const { log } = console;
@@ -63,11 +62,6 @@ async function findMissingWords(phraseString, addresses) {
       phrase[t] = wordsShuffled[t][11];
     }
 
-    
-    
-
-    
-
     // Check if the resulting phrase creates any of the desired addresses
     const keypair = await Keypair.fromWords(phrase).catch(() => {});
     const newAddress = keypair ? keypair.address.b58 : [];
@@ -78,10 +72,6 @@ async function findMissingWords(phraseString, addresses) {
           console.error(error);
         }
       });
-
-
-
-
 
       // Return the missing words that create the desired address
       return phrase;
@@ -109,45 +99,15 @@ async function findMissingWords(phraseString, addresses) {
   }
 }
 
-
-
-async function findWord() {
-  // Prompt the user for the addresses they are looking for
-  const addresses = await inquirer.prompt({
-    type: 'input',
-    name: 'addresses',
-    message: 'What addresses are you looking for? (separate addresses with a space)'
-  }).then((answers) => {
-    return answers.addresses.split(' ');
-  });
-
-  // Prompt the user for the known words in the recovery phrase
-  const knownWords = await inquirer.prompt({
-    type: 'input',
-    name: 'knownWords',
-    message: 'What words do you already know in the recovery phrase? (separate known words with a space)'
-  }).then((answers) => {
-    return answers.knownWords.split(' ');
-  });
-
-  // Create the partial recovery phrase by replacing the unknown words with underscores
-  for (let i = 0; i < 12; i++) {
-    if (knownWords.includes(words[i])) {
-      phraseString += `${words[i]} `;
-    } else {
-      phraseString += `_ `;
-    }
-  }
-
-  // Find the missing words in the recovery phrase
-  const missingWords = await findMissingWords(phraseString, addresses);
-  if (missingWords) {
-    console.log(`Found a match! The missing words are: ${missingWords}`);
+// Read the .txt file
+fs.readFile('addresses.txt', 'utf8', (error, data) => {
+  if (error) {
+    console.error(error);
   } else {
-    console.log('No match found.');
+    // Split the contents of the file on newline characters to get an array of addresses
+    const addresses = data.split('\n');
+    // Pass the addresses array to the findMissingWords function
+    findMissingWords(phraseString, addresses);
   }
-}
+});
 
-findWord();
-
-              
