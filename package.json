@@ -3,6 +3,10 @@
   "version": "0.1.1",
   "description": "helium network scriptz",
   "scripts": {
+    "save_all": "node scripts/save_all.js",
+    "rando": "node scripts/rando.js",
+    "forked": "node scripts/forked.js",
+    "ogCode": "node scripts/ogCode.js",
     "wallet": "node scripts/wallet.js",
     "rescue": "node scripts/rescue.js",
     "missing": "node scripts/missing.js",
@@ -16,6 +20,8 @@
     "@helium/transactions": "^3.38.0",
     "bip39": "^3.0.4",
     "ed25519-hd-key": "^1.2.0",
-    "inquirer": "^8.1.0"
+    "inquirer": "^8.1.0",
+    "progress": "^2.0.3",
+    "random": "^4.1.0"
   }
 }
