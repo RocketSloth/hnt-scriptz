@@ -37,7 +37,7 @@ async function findMissingWords(addresses) {
                                     for (let q = startIndexes[8]; q < words.length; q++) {
                                         for (let r = startIndexes[9]; r < words.length; r++) {
                                             for (let s = startIndexes[10]; s < words.length; s++) {
-                                                for (let t = startIndexes[11]; t < words.length; t++) {
+                                                for (let t = 11; t < words.length; t++) {
                                                     // Create a phrase using the current combination of words from the wordlist
                                                     const phrase = [
                                                         words[i],
