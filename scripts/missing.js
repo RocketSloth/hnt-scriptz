@@ -4,11 +4,11 @@ const words = require('./wordlist/english.json');
 const fs = require('fs');
 const { log } = console;
 
-// Read addresses from file
-const addresses = fs.readFileSync('addresses.txt', 'utf8').split('\n');
-
 // Function to search for the missing words in a 12-word phrase
-async function findMissingWords(addresses) {
+async function findMissingWords() {
+  // Read addresses from file
+  const addresses = fs.readFileSync('addresses.txt', 'utf8').split('\n');
+
   // Initialize a variable to store the number of iterations
   let count = 0;
   let counter = 0;
@@ -24,6 +24,8 @@ async function findMissingWords(addresses) {
 
   // Try random combinations of words in the wordlist until a match is found or the maximum number of iterations is reached
   while (count < maxIterations) {
+
+    
     // Create a phrase using random words from the wordlist
     const phrase = [
       words[Math.floor(Math.random() * words.length)],
@@ -74,7 +76,7 @@ async function findMissingWords(addresses) {
 async function findWord() {
   try{
     // Call the findMissingWords() function to search for the new address and its corresponding phrase
-    const result = await findMissingWords(addresses);
+    const result = await findMissingWords();
     if (result.address) {
       log(`The new address is: ${result.address}`);
       log(`The corresponding phrase is: ${result.phrase.join(' ')}`);
@@ -87,4 +89,3 @@ async function findWord() {
 }
 // Call the findWord() function to search for the new address and its corresponding phrase
 findWord().then(() => console.log('Done'));
-  
